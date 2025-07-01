@@ -1,0 +1,363 @@
+Livre
+
+Exemplaire
+
+Pret :
+    Lecture sur place
+    Maison
+
+Adherent :
+    Etudiant
+    Professionel
+    Professeur
+
+Penalite
+
+Cotisation/Inscription
+
+/profile/pret
+
+
+
+
+
+
+
+FONCTIONNALITÉS PRINCIPALES DU SYSTÈME DE GESTION DE BIBLIOTHÈQUE
+
+1. GESTION DES LIVRES
+   - Ajout de nouveaux livres
+   - Modification des informations des livres
+   - Suppression de livres
+   - Restrictions d'accès par type de membre
+
+2. GESTION DES EXEMPLAIRES
+   - Ajout de plusieurs exemplaires par livre
+   - Suivi de l'état des exemplaires :
+     * Disponible
+     * Emprunté
+     * Réservé
+   - Historique des mouvements
+
+3. GESTION DES MEMBRES
+   - Types de membres :
+     * Étudiants
+     * Professionnels
+     * Professeurs
+   - Restrictions selon l'âge ou le profil
+   - Gestion des informations personnelles
+
+4. INSCRIPTIONS ET COTISATIONS
+   - Renouvellement des abonnements
+
+
+5. SYSTÈME DE PRÊT
+   - Prêt à domicile avec date de retour
+   - Consultation sur place
+   - Limites d'emprunt par membre(quota pqr profil)
+
+6. RÉSERVATIONS
+   - Réservation d'exemplaires indisponibles
+   - File d'attente pour les réservations
+   - Notification de disponibilité
+   - Annulation de réservation
+
+7. GESTION DES RETARDS
+   - Historique des pénalités
+-la punition est nbre de jour ts mahazo manao pret depuis n anaterana ilay boky n 1 er jour de penalisation a 
+n jours(nbre jour parametrable) qu'on peut modifier selon profil 
+
+8. PROLONGATION DE PRÊT
+   - Demande de prolongation
+   - Validation par l'administration
+   - Vérification des conflits
+   - Notification de décision
+
+9. GESTION DES JOURS FÉRIÉS
+   - Configuration des jours chômés et weekend pour checker lors d'un pret que avant ce jour ferie ou weekend 
+   no aterina ilay boky sa tsia
+   - Ajustement automatique des dates
+   - Règles paramétrables
+
+10. ESPACE ADMINISTRATEUR
+    - Tableau de bord complet
+    - Validation des demandes
+    - Gestion des utilisateurs
+    - Statistiques et rapports
+
+11. ESPACE MEMBRE
+    - Consultation des emprunts
+    - Historique des prêts
+    - Demandes en ligne
+    - Gestion du profil
+
+
+
+
+Type d’acces par utilisateur :
+	Bibliohecaire
+	Adherent
+
+
+
+
+
+Titre : Preter un (exemplaire) livre
+Utilisateur : bibliothecaire
+Entree(input) : numero adherent,numero exemplaire
+
+SCENARIO NOMINAL : 
+            exemplaire prete par l'adherent
+            
+SCENARIO ALTERNATIF :
+        ->  message d'error
+
+RESULTAT :
+adherent incatif - > error
+...
+ex - > indisponible
+qota acter -1
+
+REGLE DE GESTION
+adherent existe ?
+num exemplaire existe ?
+disponibilité exemplaire ?
+adherent sanctionne ?
+quota ??
+possible pret - > livre
+
+
+
+
+
+
+Titre : S'inscrire en tant que membre
+
+Utilisateur : bibliothecaire
+
+Entree(input) : 
+   nom
+   prenom
+   date de naissance
+   sexe
+   adresse
+   categorie d'adherent (profil)
+   Somme de cotisation
+   date d'inscription et de payement de cotisation
+
+SCENARIO NOMINAL : 
+   connexion du bibliothecaire
+   Lien vers la page d'ajout d'un membre
+   Entree des informations necessaies concernant la personne inscrite.
+   Enregistrer la personne
+
+            
+SCENARIO ALTERNATIF :
+        ->  message d'error
+
+RESULTAT :
+   Mise en actif de l'adherent
+   Attribution a la personne une reference
+   Fixation de la date des disponibilité de la cotisation donnee(date de fin de validite de la cotisation)
+   Afficher le montant de la cotisation paye
+   Afficher un message de succes
+
+
+
+
+
+
+Titre : Reserver un exemplaire de livre
+Utilisateur : bibliothecaire
+Entree(input) : numero adherent,
+                numero exemplaire,
+                date de reservation
+                date du pret
+
+SCENARIO NOMINAL : 
+  connexion du bibliothecaire
+   Lien vers la liste des exemplaires
+   Selectionner l' (ou les)exemplaire(s) recherche
+   Entrer la date du pret et la date actuelle
+   Entrer la date du retour
+   Valider la demande
+            
+            
+SCENARIO ALTERNATIF :
+        ->  message d'error
+
+RESULTAT :
+Changement de l'Etat de l'exemplaire en En pret
+Ajout du reference de l'adherent, celle du pret et du retour
+
+REGLE DE GESTION
+adherent doit etre actif
+existance des exemplaires 
+disponibilité de l' exemplaire 
+adherent sanctionne 
+l'exemplaire doit correspondre au satus de l'adherent(il doit avoir un droit d'acces a l'exemplaire)
+Verification du nombre de quota(a chaque pret ce nombre diminue de -1/pret) si c'est encore valide
+possible pret - > livre
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+Titre : Prolonger la duree du pret d' un exemplaire de livre
+Utilisateur : bibliothecaire
+Entree(input) : numero adherent,
+                numero exemplaire,
+                date de prolongement
+                nouvel date de retour apres prolongement
+
+SCENARIO NOMINAL : 
+  connexion du bibliothecaire
+   Lien vers la liste des exemplaires Reserve
+   Selectionner l' (ou les)exemplaire(s) recherche
+   Modification de la date du retour du pret
+   Entrer la date du actuelle du prolongement
+   Valider la demande
+            
+            
+SCENARIO ALTERNATIF :
+        ->  message d'error
+
+RESULTAT :
+Date de retour modifiee
+Ajout du reference de l'adherent, celle du pret et du retour
+
+REGLE DE GESTION
+adherent doit etre actif
+disponibilité de l' exemplaire si aucune nouvelle reservation n'a eu lieu sur l'ancienne date de retour
+adherent sanctionne 
+Verification du nombre de quota(a chaque pret ce nombre diminue de -1/pret) si c'est encore valide
+
+
+
+DASHBOARD
+voir livre le plus emprunter
+voir livre le plus lus sur place
+voir nbre personne non adherent mamaky boky ao 
+voir nbre personne mamaky boky sur place isanandro
+voir nbre personne emprunte livre /jour
+voir nbre penalite /mois
+voir personne abbone /ans 
+voir nbre enfant/adulte/etudiant/prof/Professionel par ans
+1 abonnement=parametrable (par defaut pd 1 ans )
+inscription peut etre enligne et sur place avec validation de bibliothecaire 
+
+
+
+
+- voicimon idee pour ce projet:
+pour le bliothequaire apres onnexion,il peut Enregistrer les adherent(nom,prenom,date de naissane pour voir l'age car le prix de l'inscription
+depend de tranhe d'age :enfant/juene/adulte et tous est parametrable,et les professions(etudiant/professeur.Professionel
+ou autre car le type delivres qu'on peut emprunter est aussi selon profession et age) exemple il y a des livres pour plus de 18 ans,
+livre pour les professeurs seulement,etc,...puis il insere le debut d'adhesion et le fin d'adhesion mais le fin d'adhesion est selon 
+le condtion qui est parametrable par le bibliothecaire exemple 1 ans pour un abonnement et par defaut le abonnement est 1 ans par abonnement)
+puis apres validation:le cout d'insription va s'afficher pour l'adherent et
+les types de livres quil peut emprunter 
+
+CREATE TABLE auteur(
+    id int,
+    name
+);
+
+CREATE TABLE genre (
+  genre_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) UNIQUE NOT NULL
+);
+
+create table categorie(
+    id int,
+    categories enum('erotique','autre') 
+    DEFAULT 'autre';
+);
+
+CREATE table livre(
+    id int ,
+    titre,
+    idGenre int,
+    idAuteur int,
+    idCategorie,
+    nbreExemplaires
+);
+
+1-insertion et affichage des livres et insertions dans terminal fa affichage fotsin n aseho liste des livres par genre et par auteur
+une personne peut prendre des livres meme si il a deja emprunter mais pas enore penaliser sur le livre quil abboneemprunter avantt ca 
+et penalite est le nbre jour marametrable ts mahazo maka boky exemple si fin 30 mai or nanatitra t# 3 juin alors manomboka 3 juin +jour de penalisation prametranble 
+no duree de penalisationny 
+
+
+
+CREATE TABLE personne (
+  person_id INT AUTO_INCREMENT PRIMARY KEY,
+  nom VARCHAR(100) NOT NULL,
+  prenom VARCHAR(100) NOT NULL,
+  birth_date DATE,
+  type ENUM('membre','bibliothecaire') NOT NULL,
+  login VARCHAR(100),
+  password VARCHAR(255)
+  );
+
+
+CREATE TABLE bibliothecaire (
+  person_id INT PRIMARY KEY,
+  start_date DATE,
+  end_date DATE DEFAULT NULL,
+  FOREIGN KEY (person_id) REFERENCES personne(person_id)
+);
+
+
+CREATE TABLE adherent (
+  person_id INT PRIMARY KEY,
+  category ENUM('etudiant','professionnel','professeur') NOT NULL,
+  debut DATE,
+  fin DATE,
+  FOREIGN KEY (person_id) REFERENCES personne(person_id)
+);
+
+systeme de reservation 
+
+
+CREATE TABLE penalite (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  membre_id INT NOT NULL,
+  delay_days INT NOT NULL,   -- jours à pénaliser
+  created_date DATE NOT NULL,
+  FOREIGN KEY (membre_id) REFERENCES membre(d)
+);
+
+Emprunt possible si sans pénalité
+Avant chaque prêt, le système vérifie si l’adhérent a des pénalités non réglées (retards passés).
+Si aucune pénalité, il peut emprunter.
+Si des jours de retard non enregistrés ou non régularisés sont présents, il est bloqué jusqu’à régularisation.
+Exemple : un adhérent doit des jours de retard pour un prêt précédent mais n’a pas encore été pénalisé → le prêt peut encore être validé, tant que la pénalité n’est pas inscrite.
+
+
+
+
+
+
+au moment pret manao check oe aprs ou avant jour ferie ou weekend ny tokony ateriny
+
+
+voir juste dans statistique si ce pret st prolonger ou non et misy limie de boky a prolonger
+ts ilaina ilay vola fa date d'abonnemnt fotsin
+pas d'inscription vennt de adherent f tode par bibliothecaire
+
+Paramétrage des pénalités en jours
+Tu peux définir une pénalité uniquement en nombre de jours, sans montant, selon des règles paramétrables :
+
+L’adhérent devait rendre pour le 30 mai, mais ne rend finalement que le 3 juin → 
+le système enregistre un retard alors il obtient une penaliter de n jours en 
+comptant ce n jours  en commencant  au jour ou il a rendu le livre;
+
+inscription peut etre en ligne et validation par bibliothecaire
+
+duree max prolongement 
+et quota de prolongement
+
+
+misy quota pret jusquace que averina ilay quota qfqkq oe naka 4 aveo demain maka 1
+n rehetra ao dia par profil daolo
+
+ny jours avant no manao demande de prolongement fa ts jour j
