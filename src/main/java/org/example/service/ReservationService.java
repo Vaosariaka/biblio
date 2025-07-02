@@ -93,6 +93,63 @@ public class ReservationService {
         }
     }
 
+    public Reservation saveOrUpdate(Reservation reservation, String regleAjustement) {
+        try {
+            // Vérifier si la réservation existe
+            Optional<Reservation> existingReservation = reservationRepository.findById(reservation.getReservationId());
+            if (existingReservation.isEmpty()) {
+                throw new IllegalArgumentException("Réservation inexistante.");
+            }
+
+            // Vérifier l'adhérent
+            Optional<Adherent> adherentOpt = adherentRepository.findById(reservation.getIdAdherent());
+            if (adherentOpt.isEmpty() || adherentOpt.get().getDateFin().isBefore(LocalDate.now())) {
+                throw new IllegalStateException("Adhérent inactif ou inexistant.");
+            }
+            Adherent adherent = adherentOpt.get();
+
+            // Vérifier le quota
+            if (adherent.getQuotaPrets() <= 0 && existingReservation.get().getIdAdherent() != reservation.getIdAdherent()) {
+                throw new IllegalStateException("Quota de réservations atteint.");
+            }
+
+            // Vérifier l'exemplaire
+            Optional<Exemplaire> exemplaireOpt = exemplaireRepository.findById(reservation.getIdExemplaire());
+            if (exemplaireOpt.isEmpty()) {
+                throw new IllegalStateException("Exemplaire inexistant.");
+            }
+            Exemplaire exemplaire = exemplaireOpt.get();
+
+            // Vérifier les pénalités
+            List<Penalite> penalites = penaliteRepository.findActivePenalitesByAdherent(reservation.getIdAdherent(), LocalDate.now());
+            if (!penalites.isEmpty()) {
+                throw new IllegalStateException("Adhérent sanctionné.");
+            }
+
+            // Vérifier l'accessibilité du livre
+            Livre livre = exemplaire.getLivre();
+            if (!isLivreAccessible(adherent, livre)) {
+                throw new IllegalStateException("Livre non accessible pour ce profil.");
+            }
+
+            // Ajuster la date de prêt si elle est modifiée
+            if (reservation.getDatePret() != null) {
+                reservation.setDatePret(dateUtils.adjustReturnDate(reservation.getDatePret(), regleAjustement));
+            }
+
+            // Mettre à jour l'exemplaire si nécessaire
+            if (exemplaire.getStatut() != Exemplaire.StatutExemplaire.Reserve) {
+                exemplaire.setStatut(Exemplaire.StatutExemplaire.Reserve);
+                exemplaireRepository.save(exemplaire);
+            }
+
+            // Sauvegarder la réservation
+            return reservationRepository.save(reservation);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la mise à jour de la réservation : " + e.getMessage());
+        }
+    }
+
     private boolean isLivreAccessible(Adherent adherent, Livre livre) {
         String categorieAdherent = adherent.getCategorie().toString();
         String categorieLivre = livre.getCategorie();

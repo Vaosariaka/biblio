@@ -16,15 +16,17 @@ public class PretService {
     private final AdherentRepository adherentRepository;
     private final ExemplaireRepository exemplaireRepository;
     private final PenaliteRepository penaliteRepository;
+    private final ReservationRepository reservationRepository;
     private final DateUtils dateUtils;
 
     public PretService(PretRepository pretRepository, AdherentRepository adherentRepository,
                       ExemplaireRepository exemplaireRepository, PenaliteRepository penaliteRepository,
-                      DateUtils dateUtils) {
+                      ReservationRepository reservationRepository, DateUtils dateUtils) {
         this.pretRepository = pretRepository;
         this.adherentRepository = adherentRepository;
         this.exemplaireRepository = exemplaireRepository;
         this.penaliteRepository = penaliteRepository;
+        this.reservationRepository = reservationRepository;
         this.dateUtils = dateUtils;
     }
 
