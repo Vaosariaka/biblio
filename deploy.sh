@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === Configuration ===
-WAR_NAME="VelonKan.war"
+WAR_NAME="biblio.war"
 SOURCE_DIR="."
 DEST_DIR="/opt/tomcat9/webapps"
 

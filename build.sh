@@ -48,8 +48,8 @@ cp "$LIB/"*.jar "$OUT/WEB-INF/lib/"
 # === Création du fichier WAR ===
 echo "Création du WAR..."
 cd "$OUT"
-jar -cvf ../VelonKan.war .
+jar -cvf ../biblio.war .
 cd ..
 
-echo "WAR généré avec succès : VelonKan.war"
+echo "WAR généré avec succès : biblio.war"
 echo "Vérifiez que application.properties est bien présent dans WEB-INF/classes"
