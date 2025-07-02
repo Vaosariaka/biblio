@@ -4,8 +4,9 @@ import org.example.entity.Penalite;
 import org.example.repository.PenaliteRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PenaliteService {
@@ -16,26 +17,28 @@ public class PenaliteService {
         this.penaliteRepository = penaliteRepository;
     }
 
-    // Récupérer la pénalité unique (si on suppose qu'une seule pénalité est active à la fois)
-    public Optional<Penalite> getPenaliteActive() {
-        return penaliteRepository.findAll().stream().findFirst();
-    }
-
     public List<Penalite> findAll() {
         return penaliteRepository.findAll();
-    }
-
-    // Ajouter ou modifier la pénalité
-    public Penalite saveOrUpdate(Penalite penalite) {
-        return penaliteRepository.save(penalite);
     }
 
     public Optional<Penalite> findById(Integer id) {
         return penaliteRepository.findById(id);
     }
 
-    // Supprimer
+    public Penalite saveOrUpdate(Penalite penalite) {
+        return penaliteRepository.save(penalite);
+    }
+
     public void delete(Integer id) {
         penaliteRepository.deleteById(id);
+    }
+
+    public boolean hasActivePenalite(int idAdherent) {
+        List<Penalite> penalites = penaliteRepository.findActivePenalitesByAdherent(idAdherent, LocalDate.now());
+        return !penalites.isEmpty();
+    }
+
+    public LocalDate getDateFinPenalite(Penalite penalite) {
+        return penalite.getDateDebut().plusDays(penalite.getNbreJoursSanction());
     }
 }
