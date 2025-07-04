@@ -45,7 +45,7 @@
 </style>
 <div class="login-container">
     <h1>Connexion</h1>
-    <form action="/bibliologin/auth/login" method="post">
+    <form action="/biblio/auth/login" method="post">
         <input type="text" name="login" placeholder="Login" required>
         <input type="password" name="mot_de_passe" placeholder="Mot de passe" required>
         <button type="submit">Se connecter</button>
