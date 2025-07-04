@@ -2,56 +2,80 @@ package org.example.controller;
 
 import org.example.entity.Bibliothecaire;
 import org.example.service.BibliothecaireService;
-import org.springframework.http.ResponseEntity;
+import org.example.service.PersonneService;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/bibliothecaires")
+@Controller
+@RequestMapping("/bibliothecaires")
 public class BibliothecaireController {
 
     private final BibliothecaireService bibliothecaireService;
+    private final PersonneService personneService;
 
-    public BibliothecaireController(BibliothecaireService bibliothecaireService) {
+    public BibliothecaireController(BibliothecaireService bibliothecaireService, PersonneService personneService) {
         this.bibliothecaireService = bibliothecaireService;
+        this.personneService = personneService;
     }
 
     @GetMapping
-    public List<Bibliothecaire> getAllBibliothecaires() {
-        return bibliothecaireService.findAll();
+    public String listBibliothecaires(Model model) {
+        List<Bibliothecaire> bibliothecaires = bibliothecaireService.findAll();
+        model.addAttribute("bibliothecaires", bibliothecaires);
+        return "bibliothecaire/list";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Bibliothecaire> getBibliothecaireById(@PathVariable Integer id) {
-        Optional<Bibliothecaire> bibliothecaire = bibliothecaireService.findById(id);
-        return bibliothecaire.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/new")
+    public String newBibliothecaire(Model model) {
+        model.addAttribute("bibliothecaire", new Bibliothecaire());
+        model.addAttribute("personnes", personneService.findAll());
+        return "bibliothecaire/form";
     }
 
-    @PostMapping
-    public Bibliothecaire createBibliothecaire(@RequestBody Bibliothecaire bibliothecaire) {
-        return bibliothecaireService.saveOrUpdate(bibliothecaire);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Bibliothecaire> updateBibliothecaire(@PathVariable Integer id, @RequestBody Bibliothecaire bibliothecaire) {
-        Optional<Bibliothecaire> existing = bibliothecaireService.findById(id);
-        if (existing.isPresent()) {
-            bibliothecaire.setPersonneId(id);
-            return ResponseEntity.ok(bibliothecaireService.saveOrUpdate(bibliothecaire));
+    @PostMapping("/save")
+    public String saveBibliothecaire(@RequestParam Integer personneId, Model model) {
+        try {
+            Bibliothecaire bibliothecaire = new Bibliothecaire();
+            bibliothecaire.setPersonneId(personneId);
+            bibliothecaireService.saveOrUpdate(bibliothecaire);
+            return "redirect:/bibliothecaires";
+        } catch (Exception e) {
+            model.addAttribute("message", "Erreur : " + e.getMessage());
+            model.addAttribute("bibliothecaire", new Bibliothecaire());
+            model.addAttribute("personnes", personneService.findAll());
+            return "bibliothecaire/form";
         }
-        return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBibliothecaire(@PathVariable Integer id) {
-        if (bibliothecaireService.findById(id).isPresent()) {
-            bibliothecaireService.delete(id);
-            return ResponseEntity.ok().build();
+    @GetMapping("/edit/{id}")
+    public String editBibliothecaire(@PathVariable Integer id, Model model) {
+        Bibliothecaire bibliothecaire = bibliothecaireService.findById(id).orElseThrow(() -> new IllegalArgumentException("Bibliothécaire introuvable"));
+        model.addAttribute("bibliothecaire", bibliothecaire);
+        model.addAttribute("personnes", personneService.findAll());
+        return "bibliothecaire/form";
+    }
+
+    @PostMapping("/update/{id}")
+    public String updateBibliothecaire(@PathVariable Integer id, @RequestParam Integer personneId, Model model) {
+        try {
+            Bibliothecaire bibliothecaire = bibliothecaireService.findById(id).orElseThrow(() -> new IllegalArgumentException("Bibliothécaire introuvable"));
+            bibliothecaire.setPersonneId(personneId);
+            bibliothecaireService.saveOrUpdate(bibliothecaire);
+            return "redirect:/bibliothecaires";
+        } catch (Exception e) {
+            model.addAttribute("message", "Erreur : " + e.getMessage());
+            model.addAttribute("bibliothecaire", bibliothecaireService.findById(id).orElse(new Bibliothecaire()));
+            model.addAttribute("personnes", personneService.findAll());
+            return "bibliothecaire/form";
         }
-        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteBibliothecaire(@PathVariable Integer id) {
+        bibliothecaireService.delete(id);
+        return "redirect:/bibliothecaires";
     }
 }
- 

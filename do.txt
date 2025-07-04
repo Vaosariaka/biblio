@@ -13,7 +13,6 @@ Adherent :
 
 Penalite
 
-Cotisation/Inscription
 
 /profile/pret
 
@@ -261,8 +260,8 @@ CREATE TABLE auteur(
     name
 );
 
-CREATE TABLE genre (
-  genre_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE Genre (
+  Genre_id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) UNIQUE NOT NULL
 );
 
@@ -281,7 +280,7 @@ CREATE table livre(
     nbreExemplaires
 );
 
-1-insertion et affichage des livres et insertions dans terminal fa affichage fotsin n aseho liste des livres par genre et par auteur
+1-insertion et affichage des livres et insertions dans terminal fa affichage fotsin n aseho liste des livres par Genre et par auteur
 une personne peut prendre des livres meme si il a deja emprunter mais pas enore penaliser sur le livre quil abboneemprunter avantt ca 
 et penalite est le nbre jour marametrable ts mahazo maka boky exemple si fin 30 mai or nanatitra t# 3 juin alors manomboka 3 juin +jour de penalisation prametranble 
 no duree de penalisationny 

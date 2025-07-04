@@ -2,6 +2,8 @@
 CREATE TYPE type_personne AS ENUM ('adherent', 'bibliothecaire');
 CREATE TYPE categorie_adherent AS ENUM ('etudiant', 'professionnel', 'professeur');
 CREATE TYPE statut_exemplaire AS ENUM ('Disponible', 'Emprunte', 'Reserve');
+CREATE TYPE categorie_age AS ENUM ('Moins de 18 ans', 'Plus de 18 ans');
+
 
 -- 2. Table personne
 CREATE TABLE personne (
@@ -31,9 +33,9 @@ CREATE TABLE bibliothecaire (
   FOREIGN KEY (personne_id) REFERENCES personne(personne_id) ON DELETE CASCADE
 );
 
--- 5. Table genreLivre
-CREATE TABLE genreLivre (
-  genre_id SERIAL PRIMARY KEY,
+-- 5. Table Genre
+CREATE TABLE Genre (
+  Genre_id SERIAL PRIMARY KEY,
   nom VARCHAR(100) NOT NULL UNIQUE
 );
 
@@ -47,11 +49,11 @@ CREATE TABLE auteur (
 CREATE TABLE livre (
   livre_id SERIAL PRIMARY KEY,
   titre VARCHAR(255) NOT NULL,
-  id_genre INT NOT NULL,
+  id_Genre INT NOT NULL,
   id_auteur INT NOT NULL,
-  categorie VARCHAR(50),
+  categorie categorie_age, -- Remplacement de VARCHAR(50) par categorie_age
   nombre_exemplaires INT NOT NULL DEFAULT 0,
-  FOREIGN KEY (id_genre) REFERENCES genreLivre(genre_id),
+  FOREIGN KEY (id_Genre) REFERENCES Genre(Genre_id),
   FOREIGN KEY (id_auteur) REFERENCES auteur(auteur_id)
 );
 

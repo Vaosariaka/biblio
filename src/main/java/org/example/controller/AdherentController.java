@@ -1,56 +1,196 @@
 package org.example.controller;
 
-import org.example.entity.Adherent;
-import org.example.service.AdherentService;
-import org.springframework.http.ResponseEntity;
+import org.example.entity.*;
+import org.example.service.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Optional; 
 
-@RestController
-@RequestMapping("/api/adherents")
+@Controller
+@RequestMapping("/adherents")
 public class AdherentController {
-
     private final AdherentService adherentService;
+    private final PersonneService personneService;
 
-    public AdherentController(AdherentService adherentService) {
+    public AdherentController(AdherentService adherentService, PersonneService personneService) {
         this.adherentService = adherentService;
+        this.personneService = personneService;
     }
 
     @GetMapping
-    public List<Adherent> getAllAdherents() {
-        return adherentService.findAll();
+    public String listAdherents(Model model) {
+        List<Adherent> adherents = adherentService.findAll();
+        model.addAttribute("adherents", adherents);
+        return "adherent/list";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Adherent> getAdherentById(@PathVariable Integer id) {
-        Optional<Adherent> adherent = adherentService.findById(id);
-        return adherent.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    @GetMapping("/new")
+    public String newAdherent(Model model) {
+        model.addAttribute("adherent", new Adherent());
+        model.addAttribute("personnes", personneService.findAll());
+        return "adherent/form";
     }
 
-    @PostMapping
-    public Adherent createAdherent(@RequestBody Adherent adherent) {
-        return adherentService.saveOrUpdate(adherent);
-    }
+    @PostMapping("/save")
+    public String saveAdherent(@RequestParam Integer personneId, @RequestParam String categorie,
+                               @RequestParam String dateDebut, @RequestParam String dateFin,
+                               @RequestParam Integer quotaPrets, @RequestParam Integer quotaProlongations,
+                               Model model) {
+        try {
+            // Validation des paramètres
+            if (personneId == null || quotaPrets == null || quotaProlongations == null) {
+                model.addAttribute("message", "Erreur : Tous les champs numériques sont requis.");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (!Arrays.asList("etudiant", "professionnel", "professeur").contains(categorie.toLowerCase())) {
+                model.addAttribute("message", "Erreur : Catégorie invalide (etudiant, professionnel, professeur).");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            LocalDate parsedDateDebut;
+            LocalDate parsedDateFin;
+            try {
+                parsedDateDebut = LocalDate.parse(dateDebut);
+                parsedDateFin = LocalDate.parse(dateFin);
+            } catch (DateTimeParseException e) {
+                model.addAttribute("message", "Erreur : Format de date invalide (attendu : yyyy-MM-dd).");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (parsedDateFin.isBefore(parsedDateDebut)) {
+                model.addAttribute("message", "Erreur : La date de fin doit être postérieure à la date de début.");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (quotaPrets < 0 || quotaProlongations < 0) {
+                model.addAttribute("message", "Erreur : Les quotas ne peuvent pas être négatifs.");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Adherent> updateAdherent(@PathVariable Integer id, @RequestBody Adherent adherent) {
-        Optional<Adherent> existing = adherentService.findById(id);
-        if (existing.isPresent()) {
-            adherent.setPersonneId(id);
-            return ResponseEntity.ok(adherentService.saveOrUpdate(adherent));
+            // Vérifier si la personne existe et est de type adherent
+            Optional<Personne> personneOpt = personneService.findById(personneId);
+            if (personneOpt.isEmpty() || personneOpt.get().getType() != Personne.TypePersonne.adherent) {
+                model.addAttribute("message", "Erreur : Personne inexistante ou type incorrect.");
+                model.addAttribute("adherent", new Adherent());
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+
+            Adherent adherent = new Adherent();
+            adherent.setPersonneId(personneId);
+            adherent.setCategorie(Adherent.CategorieAdherent.valueOf(categorie));
+            adherent.setDateDebut(parsedDateDebut);
+            adherent.setDateFin(parsedDateFin);
+            adherent.setQuotaPrets(quotaPrets);
+            adherent.setQuotaProlongations(quotaProlongations);
+            adherent.setPersonne(personneOpt.get());
+
+            adherentService.save(adherent);
+            return "redirect:/adherents";
+        } catch (Exception e) {
+            model.addAttribute("message", "Erreur : " + e.getMessage());
+            model.addAttribute("adherent", new Adherent());
+            model.addAttribute("personnes", personneService.findAll());
+            return "adherent/form";
         }
-        return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAdherent(@PathVariable Integer id) {
-        if (adherentService.findById(id).isPresent()) {
-            adherentService.delete(id);
-            return ResponseEntity.ok().build();
+    @GetMapping("/edit/{id}")
+    public String editAdherent(@PathVariable Integer id, Model model) {
+        Adherent adherent = adherentService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Adhérent introuvable"));
+        model.addAttribute("adherent", adherent);
+        model.addAttribute("personnes", personneService.findAll());
+        return "adherent/form";
+    }
+
+    @PostMapping("/update/{id}")
+    public String updateAdherent(@PathVariable Integer id, @RequestParam Integer personneId,
+                                @RequestParam String categorie, @RequestParam String dateDebut,
+                                @RequestParam String dateFin, @RequestParam Integer quotaPrets,
+                                @RequestParam Integer quotaProlongations, Model model) {
+        try {
+            // Validation des paramètres
+            if (personneId == null || quotaPrets == null || quotaProlongations == null) {
+                model.addAttribute("message", "Erreur : Tous les champs numériques sont requis.");
+                model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (!Arrays.asList("etudiant", "professionnel", "professeur").contains(categorie.toLowerCase())) {
+                model.addAttribute("message", "Erreur : Catégorie invalide (etudiant, professionnel, professeur).");
+                model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            LocalDate parsedDateDebut;
+            LocalDate parsedDateFin;
+            try {
+                parsedDateDebut = LocalDate.parse(dateDebut);
+                parsedDateFin = LocalDate.parse(dateFin);
+            } catch (DateTimeParseException e) {
+                model.addAttribute("message", "Erreur : Format de date invalide (attendu : yyyy-MM-dd).");
+                model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (parsedDateFin.isBefore(parsedDateDebut)) {
+                model.addAttribute("message", "Erreur : La date de fin doit être postérieure à la date de début.");
+                model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+            if (quotaPrets < 0 || quotaProlongations < 0) {
+                model.addAttribute("message", "Erreur : Les quotas ne peuvent pas être négatifs.");
+                model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+
+            Adherent adherent = adherentService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Adhérent introuvable"));
+            Optional<Personne> personneOpt = personneService.findById(personneId);
+            if (personneOpt.isEmpty() || personneOpt.get().getType() != Personne.TypePersonne.adherent) {
+                model.addAttribute("message", "Erreur : Personne inexistante ou type incorrect.");
+                model.addAttribute("adherent", adherent);
+                model.addAttribute("personnes", personneService.findAll());
+                return "adherent/form";
+            }
+
+            adherent.setPersonneId(personneId);
+            adherent.setCategorie(Adherent.CategorieAdherent.valueOf(categorie));
+            adherent.setDateDebut(parsedDateDebut);
+            adherent.setDateFin(parsedDateFin);
+            adherent.setQuotaPrets(quotaPrets);
+            adherent.setQuotaProlongations(quotaProlongations);
+            adherent.setPersonne(personneOpt.get());
+
+            adherentService.save(adherent);
+            return "redirect:/adherents";
+        } catch (Exception e) {
+            model.addAttribute("message", "Erreur : " + e.getMessage());
+            model.addAttribute("adherent", adherentService.findById(id).orElse(new Adherent()));
+            model.addAttribute("personnes", personneService.findAll());
+            return "adherent/form";
         }
-        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteAdherent(@PathVariable Integer id) {
+        adherentService.delete(id);
+        return "redirect:/adherents";
     }
 }
